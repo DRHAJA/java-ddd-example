@@ -1,4 +1,4 @@
-name: Deploy Java DDD Example
+name: Build, Test & Deploy
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-test:
+  build-test-deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -21,33 +21,15 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     
-    - name: Fix formatting with Spotless
-      run: ./gradlew spotlessApply
+    - name: Build and Test
+      run: |
+        ./gradlew spotlessApply
+        ./gradlew build
+        ./gradlew test
     
-    - name: Build with Gradle
-      run: ./gradlew build
-    
-    - name: Run tests
-      run: ./gradlew test
-
-  deploy:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-    
-    - name: Build JAR
-      run: ./gradlew bootJar
-    
-    - name: Create release
+    - name: Create Release with JAR
       uses: softprops/action-gh-release@v1
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/testing_v1'
       with:
         files: build/libs/*.jar
         generate_release_notes: true
